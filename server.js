@@ -18,6 +18,28 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 const app = express();
 const server = http.createServer(app);
 
+const parseTrustProxySetting = (value) => {
+  if (value === undefined || value === null || value === '') {
+    return undefined;
+  }
+
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+
+  const numericValue = Number(value);
+  if (!Number.isNaN(numericValue)) {
+    return numericValue;
+  }
+
+  return value;
+};
+
+const trustProxySetting =
+  parseTrustProxySetting(process.env.TRUST_PROXY) ??
+  ((process.env.RENDER || process.env.NODE_ENV === 'production') ? 1 : false);
+
+app.set('trust proxy', trustProxySetting);
+
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   ...(process.env.FRONTEND_URLS || '')
