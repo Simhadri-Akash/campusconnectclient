@@ -18,10 +18,20 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 const app = express();
 const server = http.createServer(app);
 
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  ...(process.env.FRONTEND_URLS || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+  'http://localhost:3000',
+  'http://localhost:3001'
+].filter(Boolean);
+
 // Socket.IO setup
 const io = socketIo(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -56,12 +66,6 @@ app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-
-    const allowedOrigins = [
-      process.env.FRONTEND_URL,
-      'http://localhost:3000',
-      'http://localhost:3001'
-    ];
 
     if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
       callback(null, true);
